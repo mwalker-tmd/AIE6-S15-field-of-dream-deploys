@@ -1,5 +1,22 @@
 from backend.core.vectordatabase import VectorDatabase
 from backend.core.text_utils import PDFLoader, TextFileLoader, CharacterTextSplitter
+from langchain.schema.retriever import BaseRetriever
+from typing import List, Dict, Any
+
+class VectorStoreRetriever(BaseRetriever):
+    """A retriever that uses the vector store for similarity search."""
+    
+    def __init__(self, vector_store):
+        super().__init__()
+        self.vector_store = vector_store
+        
+    def _get_relevant_documents(self, query: str) -> List[Dict[str, Any]]:
+        """Get documents relevant for a query."""
+        if not self.vector_store.is_initialized:
+            return []
+            
+        results = self.vector_store.search(query)
+        return [{"page_content": text, "metadata": {"score": score}} for text, score in results]
 
 class VectorStore:
     _instance = None
@@ -51,6 +68,10 @@ class VectorStore:
         except Exception as e:
             print(f"Error in vector store search: {e}")
             return []
+
+    def as_retriever(self) -> BaseRetriever:
+        """Convert the vector store into a LangChain retriever."""
+        return VectorStoreRetriever(self)
 
     @property
     def is_initialized(self) -> bool:

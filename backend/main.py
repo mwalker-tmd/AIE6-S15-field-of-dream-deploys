@@ -2,7 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from .api import router as api_router
+from backend.api import router as api_router
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,3 +31,9 @@ if os.getenv("ENVIRONMENT") == "production":
 if os.getenv("DEBUG", "false").lower() == "true":
     for route in app.routes:
         print(f"🔗 ROUTE: {route.path} → {route.name}")
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 7860))
+    host = os.getenv("HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)

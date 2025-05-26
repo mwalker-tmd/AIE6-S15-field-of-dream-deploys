@@ -1,0 +1,75 @@
+import { useState } from 'react'
+import { getApiUrl } from '../utils/env'
+
+function FileUploader({ onUploadSuccess }) {
+  const [file, setFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [message, setMessage] = useState('')
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0])
+    setMessage('')
+  }
+
+  const uploadFile = async (e) => {
+    e.preventDefault()
+    if (!file) {
+      setMessage('Please select a file first')
+      return
+    }
+
+    setUploading(true)
+    setMessage('')
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      // TODO: This endpoint expects a backend route POST /upload
+      const response = await fetch(`${getApiUrl()}/upload`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setMessage(data.message || 'Upload successful!')
+      setFile(null)
+      if (onUploadSuccess) onUploadSuccess()
+    } catch (error) {
+      console.error('Upload error:', error)
+      setMessage('Upload error: ' + error.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <div className="file-uploader">
+      {/* TODO: Replace or style this component for your use case */}
+      <form onSubmit={uploadFile} role="form">
+        <label htmlFor="file-input">File:</label>
+        <input
+          id="file-input"
+          type="file"
+          onChange={handleFileChange}
+          disabled={uploading}
+        />
+        <button type="submit" disabled={!file || uploading}>
+          {uploading ? 'Uploading...' : 'Upload'}
+        </button>
+      </form>
+
+      {message && (
+        <p className="message" data-testid="upload-message">
+          {message}
+        </p>
+      )}
+    </div>
+  )
+}
+
+export default FileUploader

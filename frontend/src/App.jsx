@@ -6,6 +6,10 @@ import './App.css' // Layout styles
 function App() {
   const [fileUploaded, setFileUploaded] = useState(false)
 
+  const handleNewDocument = () => {
+    setFileUploaded(false)
+  }
+
   return (
     <div className={`app-root ${fileUploaded ? 'chat-mode' : 'initial-mode'}`}>
       <div className="branding">
@@ -16,6 +20,15 @@ function App() {
           className="logo"
         />
         <h1>AI Agent Chat Template</h1>
+        {fileUploaded && (
+          <button 
+            className="new-document-btn"
+            onClick={handleNewDocument}
+            title="Upload a new document"
+          >
+            📄 New Document
+          </button>
+        )}
       </div>
 
       {fileUploaded && (

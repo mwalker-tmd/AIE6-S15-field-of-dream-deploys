@@ -5,7 +5,6 @@ export default function ChatBox() {
   const [question, setQuestion] = useState('')
   const [response, setResponse] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
-  const [endpoint, setEndpoint] = useState('/ask')  // or '/agent'
 
   const askQuestion = async (e) => {
     e.preventDefault()
@@ -16,20 +15,18 @@ export default function ChatBox() {
 
     try {
       const formData = new FormData()
-      formData.append(endpoint === '/ask' ? 'question' : 'query', question) // flexible
+      formData.append('question', question)
 
-      const res = await fetch(`${getApiUrl()}${endpoint}`, {
+      const res = await fetch(`${getApiUrl()}/ask`, {
         method: 'POST',
         body: formData,
       })
 
       if (!res.ok) {
-        // Try to parse the error response
         try {
           const errorData = await res.json()
           throw new Error(errorData.error || `HTTP error! status: ${res.status}`)
         } catch (e) {
-          // If parsing fails, use the status text
           throw new Error(`HTTP error! status: ${res.status}`)
         }
       }
@@ -42,10 +39,10 @@ export default function ChatBox() {
           if (done) break
           const text = decoder.decode(value)
           try {
-            const parsed = JSON.parse(text);
-            setResponse(prev => prev + (parsed.response || text));
+            const parsed = JSON.parse(text)
+            setResponse(prev => prev + (parsed.response || text))
           } catch {
-            setResponse(prev => prev + text);
+            setResponse(prev => prev + text)
           }
         }
       } else {
@@ -62,7 +59,6 @@ export default function ChatBox() {
 
   return (
     <>
-      {/* TODO: Customize this UI based on your agent or query-based backend */}
       <div className="response-panel" data-testid="response-panel">
         {response || 'Response will appear here...'}
       </div>
@@ -75,15 +71,6 @@ export default function ChatBox() {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="Ask a question..."
         />
-
-        <select
-          value={endpoint}
-          onChange={(e) => setEndpoint(e.target.value)}
-          disabled={isStreaming}
-        >
-          <option value="/ask">RAG (/ask)</option>
-          <option value="/agent">Agent (/agent)</option>
-        </select>
 
         <button onClick={askQuestion} disabled={isStreaming}>
           {isStreaming ? 'Thinking…' : 'Ask'}

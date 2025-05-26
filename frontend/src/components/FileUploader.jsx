@@ -25,7 +25,6 @@ function FileUploader({ onUploadSuccess }) {
     formData.append('file', file)
 
     try {
-      // TODO: This endpoint expects a backend route POST /upload
       const response = await fetch(`${getApiUrl()}/upload`, {
         method: 'POST',
         body: formData,
@@ -49,7 +48,6 @@ function FileUploader({ onUploadSuccess }) {
 
   return (
     <div className="file-uploader">
-      {/* TODO: Replace or style this component for your use case */}
       <form onSubmit={uploadFile} role="form">
         <label htmlFor="file-input">File:</label>
         <input

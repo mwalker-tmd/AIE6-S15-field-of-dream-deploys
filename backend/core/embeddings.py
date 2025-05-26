@@ -1,11 +1,7 @@
 """
-Embedding model provider used by the vector database.
+Embedding model provider using HuggingFace Inference Endpoints.
 
-This implementation uses HuggingFace Inference Endpoints for embeddings.
-
-TODO:
-- Customize model name or add conditional logic for different providers.
-- Add error handling or caching if needed.
+This implementation uses HuggingFace Inference Endpoints for generating vector embeddings.
 """
 
 import os

@@ -1,9 +1,8 @@
 """
-Chat model support.
+Chat model support for HuggingFace Inference Endpoints.
 
 Includes:
-- ChatModel class for basic RAG-style completion/streaming
-- get_chat_model() for LangChain-compatible usage with agents
+- ChatModel class for RAG-style completion/streaming
 """
 
 import os
@@ -14,8 +13,7 @@ from langchain.schema import HumanMessage, SystemMessage
 
 class ChatModel:
     """
-    Simple wrapper around HuggingFace Inference Endpoints for RAG.
-
+    Wrapper around HuggingFace Inference Endpoints for RAG.
     Supports synchronous and asynchronous responses with streaming output.
     """
 

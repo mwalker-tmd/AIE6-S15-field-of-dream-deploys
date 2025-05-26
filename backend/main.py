@@ -9,10 +9,8 @@ load_dotenv()
 
 app = FastAPI()
 
-# CORS middleware to allow frontend to talk to the backend
-
+# Configure CORS
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -21,16 +19,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# Include the endpoints
+# Include API routes
 app.include_router(api_router)
 
-# This directs FastAPI to serve the React build from '/' (root) -- NOTE: This is only required for production only
+# Serve frontend in production
 if os.getenv("ENVIRONMENT") == "production":
     frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "static"))
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
 
-# Print routes on startup when in debug mode
+# Debug mode: print routes
 if os.getenv("DEBUG", "false").lower() == "true":
     for route in app.routes:
         print(f"🔗 ROUTE: {route.path} → {route.name}")

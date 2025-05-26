@@ -1,9 +1,5 @@
 """
-Vector database handler for storing and retrieving text chunks using embeddings with Qdrant.
-
-TODO:
-- Replace in-memory store with a persistent backend (e.g., FAISS, Pinecone).
-- Customize embedding provider as needed.
+Vector database handler for storing and retrieving text chunks using Qdrant.
 """
 
 from typing import List, Tuple

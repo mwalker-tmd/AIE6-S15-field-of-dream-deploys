@@ -25,7 +25,7 @@ function FileUploader({ onUploadSuccess }) {
     formData.append('file', file)
 
     try {
-      const response = await fetch(`${getApiUrl()}/upload`, {
+      const response = await fetch(`${getApiUrl()}/api/upload`, {
         method: 'POST',
         body: formData,
       })

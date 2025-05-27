@@ -1,5 +1,24 @@
-# LLM Agent Template
-A template repository for creating LLM apps during my AI Engineering Bootcamp
+# 🌽 Field of Dream Deploys
+
+### **_“If you deploy it, they can use it.”_**  
+Welcome to `field-of-dream-deploys`, a full-stack Retrieval-Augmented Generation (RAG) application powered by open-source models deployed via Hugging Face Inference Endpoints.
+
+This project showcases how to:
+- Load and embed real-world documents (like essays and engineering philosophies)
+- Persist them in a vector database
+- Ask questions through a conversational React frontend
+- Route responses through your own LLM and embedding endpoints — no OpenAI required
+
+Inspired by *Field of Dreams*, this app turns deployed endpoints into usable interfaces for real-time insight and discovery.
+
+Built with:
+- **LangChain**
+- **FastAPI**
+- **React**
+- **Qdrant**
+- **Hugging Face Inference Endpoints**
+
+Step onto the field. Deploy the dream. Let the questions come.
 
 ## Backend Template ([/backend](./backend))
 

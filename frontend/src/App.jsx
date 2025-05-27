@@ -4,31 +4,39 @@ import { useState } from 'react'
 import './App.css' // Layout styles
 
 function App() {
-  const [fileUploaded, setFileUploaded] = useState(false)
+  const [fileUploaded, setFileUploaded] = useState(true)  // Start in chat mode
+
+  const handleNewDocument = () => {
+    setFileUploaded(false)
+  }
 
   return (
-    <div className={`app-root ${fileUploaded ? 'chat-mode' : 'initial-mode'}`}>
+    <div className="app-root chat-mode">
       <div className="branding">
-        {/* TODO: Replace branding logo and app title with your own */}
         <img
           src="/logo_light_transparent.png"
-          alt="Your Logo"
+          alt="TMD RAG Chat"
           className="logo"
         />
-        <h1>AI Agent Chat Template</h1>
+        <h1>TMD RAG Chat</h1>
+        <button 
+          className="new-document-btn"
+          onClick={handleNewDocument}
+          title="Upload a new document"
+        >
+          📄 New Document
+        </button>
       </div>
 
-      {fileUploaded && (
+      {fileUploaded ? (
         <div className="chat-section">
-          {/* TODO: Customize ChatBox behavior, styling, or replace it entirely */}
           <ChatBox />
         </div>
+      ) : (
+        <div className="upload-section">
+          <FileUploader onUploadSuccess={() => setFileUploaded(true)} />
+        </div>
       )}
-
-      <div className="footer-uploader">
-        {/* TODO: Replace FileUploader or bypass if not needed */}
-        <FileUploader onUploadSuccess={() => setFileUploaded(true)} />
-      </div>
     </div>
   )
 }

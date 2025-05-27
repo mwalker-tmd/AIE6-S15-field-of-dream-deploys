@@ -5,47 +5,53 @@ export default function ChatBox() {
   const [question, setQuestion] = useState('')
   const [response, setResponse] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
-  const [endpoint, setEndpoint] = useState('/ask')  // or '/agent'
 
   const askQuestion = async (e) => {
     e.preventDefault()
-    if (!question.trim()) return
+    if (!question.trim() || isStreaming) return
 
     setIsStreaming(true)
     setResponse('')
 
     try {
       const formData = new FormData()
-      formData.append(endpoint === '/ask' ? 'question' : 'query', question) // flexible
+      formData.append('question', question)
 
-      const res = await fetch(`${getApiUrl()}${endpoint}`, {
+      const res = await fetch(`${getApiUrl()}/ask`, {
         method: 'POST',
         body: formData,
+        headers: {
+          'Accept': 'text/plain',
+        },
       })
 
       if (!res.ok) {
-        // Try to parse the error response
-        try {
-          const errorData = await res.json()
-          throw new Error(errorData.error || `HTTP error! status: ${res.status}`)
-        } catch (e) {
-          // If parsing fails, use the status text
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
+        const errorData = await res.json()
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`)
       }
 
       if (res.body) {
         const reader = res.body.getReader()
         const decoder = new TextDecoder('utf-8')
+        let buffer = ''
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
+
           const text = decoder.decode(value)
+          buffer += text
+
+          // Check if we have a complete JSON error message
           try {
-            const parsed = JSON.parse(text);
-            setResponse(prev => prev + (parsed.response || text));
-          } catch {
-            setResponse(prev => prev + text);
+            const errorData = JSON.parse(buffer)
+            if (errorData.error) {
+              throw new Error(errorData.error)
+            }
+          } catch (e) {
+            // Not a JSON error, continue processing as text
+            setResponse(prev => prev + text)
+            buffer = ''
           }
         }
       } else {
@@ -57,12 +63,19 @@ export default function ChatBox() {
       setResponse('Error: ' + error.message)
     } finally {
       setIsStreaming(false)
+      setQuestion('')  // Clear the question after sending
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      askQuestion(e)
     }
   }
 
   return (
     <>
-      {/* TODO: Customize this UI based on your agent or query-based backend */}
       <div className="response-panel" data-testid="response-panel">
         {response || 'Response will appear here...'}
       </div>
@@ -73,17 +86,9 @@ export default function ChatBox() {
           rows={3}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask a question..."
+          onKeyDown={handleKeyDown}
+          placeholder="Ask a question... (Press Enter to send, Shift+Enter for new line)"
         />
-
-        <select
-          value={endpoint}
-          onChange={(e) => setEndpoint(e.target.value)}
-          disabled={isStreaming}
-        >
-          <option value="/ask">RAG (/ask)</option>
-          <option value="/agent">Agent (/agent)</option>
-        </select>
 
         <button onClick={askQuestion} disabled={isStreaming}>
           {isStreaming ? 'Thinking…' : 'Ask'}

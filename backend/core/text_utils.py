@@ -1,10 +1,16 @@
+"""
+Text processing utilities for loading and handling documents.
+"""
+
 import os
 from typing import List
 import PyPDF2
 
-#TODO: Split into multiple files when warranted (e.g. /loaders, /splitters, /parsers, etc.)
-
 class TextFileLoader:
+    """
+    Loads text content from .txt files or directories containing .txt files.
+    """
+    
     def __init__(self, path: str, encoding: str = "utf-8"):
         self.documents = []
         self.path = path
@@ -37,12 +43,34 @@ class TextFileLoader:
         self.load()
         return self.documents
 
+class PDFLoader:
+    """
+    Loads text content from PDF files.
+    """
+    
+    def __init__(self, path: str):
+        self.documents = []
+        self.path = path
+
+    def load(self):
+        if not os.path.isfile(self.path) or not self.path.endswith(".pdf"):
+            raise ValueError("Provided path is not a valid PDF file.")
+
+        with open(self.path, "rb") as file:
+            pdf_reader = PyPDF2.PdfReader(file)
+            for page in pdf_reader.pages:
+                self.documents.append(page.extract_text())
+
+    def load_documents(self):
+        self.load()
+        return self.documents
+
 
 class CharacterTextSplitter:
     def __init__(
         self,
         chunk_size: int = 1000,
-        chunk_overlap: int = 200,
+        chunk_overlap: int = 30,
     ):
         assert (
             chunk_size > chunk_overlap
@@ -62,64 +90,6 @@ class CharacterTextSplitter:
         for text in texts:
             chunks.extend(self.split(text))
         return chunks
-
-
-class PDFLoader:
-    def __init__(self, path: str):
-        self.documents = []
-        self.path = path
-        print(f"PDFLoader initialized with path: {self.path}")
-
-    def load(self):
-        print(f"Loading PDF from path: {self.path}")
-        print(f"Path exists: {os.path.exists(self.path)}")
-        print(f"Is file: {os.path.isfile(self.path)}")
-        print(f"Is directory: {os.path.isdir(self.path)}")
-        print(f"File permissions: {oct(os.stat(self.path).st_mode)[-3:]}")
-        
-        try:
-            # Try to open the file first to verify access
-            with open(self.path, 'rb') as test_file:
-                pass
-            
-            # If we can open it, proceed with loading
-            self.load_file()
-            
-        except IOError as e:
-            raise ValueError(f"Cannot access file at '{self.path}': {str(e)}")
-        except Exception as e:
-            raise ValueError(f"Error processing file at '{self.path}': {str(e)}")
-
-    def load_file(self):
-        with open(self.path, 'rb') as file:
-            # Create PDF reader object
-            pdf_reader = PyPDF2.PdfReader(file)
-            
-            # Extract text from each page
-            text = ""
-            for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-            
-            self.documents.append(text)
-
-    def load_directory(self):
-        for root, _, files in os.walk(self.path):
-            for file in files:
-                if file.lower().endswith('.pdf'):
-                    file_path = os.path.join(root, file)
-                    with open(file_path, 'rb') as f:
-                        pdf_reader = PyPDF2.PdfReader(f)
-                        
-                        # Extract text from each page
-                        text = ""
-                        for page in pdf_reader.pages:
-                            text += page.extract_text() + "\n"
-                        
-                        self.documents.append(text)
-
-    def load_documents(self):
-        self.load()
-        return self.documents
 
 
 if __name__ == "__main__":

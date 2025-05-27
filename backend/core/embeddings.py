@@ -1,30 +1,36 @@
 """
-Embedding model provider used by the vector database.
+Embedding model provider using HuggingFace Inference Endpoints.
 
-This template implementation uses OpenAI's embedding model.
-To swap providers (e.g., Hugging Face, Cohere), modify or extend this class.
-
-TODO:
-- Customize model name or add conditional logic for different providers.
-- Add error handling or caching if needed.
+This implementation uses HuggingFace Inference Endpoints for generating vector embeddings.
 """
 
 import os
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 class EmbeddingProvider:
     """
-    Handles generation of vector embeddings using a pluggable backend.
+    Handles generation of vector embeddings using HuggingFace Inference Endpoints.
     
     Attributes
     ----------
-    model : BaseEmbedding
-        An instance of a LangChain-compatible embedding model.
+    model : HuggingFaceEndpointEmbeddings
+        An instance of the HuggingFace embeddings model.
     """
 
     def __init__(self):
-        model_name = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-ada-002")
-        self.model = OpenAIEmbeddings(model=model_name)
+        self.api_key = os.getenv("HF_API_KEY")
+        self.endpoint_url = os.getenv("HF_EMBEDDING_ENDPOINT_URL")
+        
+        if not self.endpoint_url:
+            raise ValueError("HF_EMBEDDING_ENDPOINT_URL environment variable is required")
+        if not self.api_key:
+            raise ValueError("HF_API_KEY environment variable is required")
+            
+        self.model = HuggingFaceEndpointEmbeddings(
+            model=self.endpoint_url,
+            task="feature-extraction",
+            huggingfacehub_api_token=self.api_key
+        )
 
     def embed_documents(self, texts):
         """

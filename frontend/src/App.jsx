@@ -15,10 +15,10 @@ function App() {
       <div className="branding">
         <img
           src="/logo_light_transparent.png"
-          alt="TMD RAG Chat"
+          alt="TMD Open Source RAG Chat"
           className="logo"
         />
-        <h1>TMD RAG Chat</h1>
+        <h1>Open Source RAG Chat</h1>
         <button 
           className="new-document-btn"
           onClick={handleNewDocument}

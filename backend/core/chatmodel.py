@@ -8,7 +8,6 @@ Includes:
 import os
 from typing import AsyncGenerator, List, Dict, Any
 from langchain_community.llms import HuggingFaceEndpoint
-from langchain.callbacks.streaming import StreamingStdOutCallbackHandler
 from langchain.schema import HumanMessage, SystemMessage
 
 class ChatModel:
@@ -26,7 +25,27 @@ class ChatModel:
         if not self.api_key:
             raise ValueError("HF_API_KEY environment variable is required")
 
-    def run(self, prompt: str) -> str:
+    def _format_prompt(self, query: str, context: str = "") -> str:
+        """
+        Format the prompt using Llama 3 template format.
+        """
+        system_message = "You are a helpful AI assistant. Use the provided context to answer questions accurately and concisely."
+        
+        prompt = f"""<|start_header_id|>system<|end_header_id|>
+{system_message}<|eot_id|>
+
+<|start_header_id|>user<|end_header_id|>
+User Query:
+{query}
+
+Context:
+{context}<|eot_id|>
+
+<|start_header_id|>assistant<|end_header_id|>"""
+        
+        return prompt
+
+    def run(self, query: str, context: str = "") -> str:
         """
         Synchronously run a prompt against the chat model.
         """
@@ -42,15 +61,11 @@ class ChatModel:
             repetition_penalty=1.03
         )
         
-        messages = [
-            SystemMessage(content="You are a helpful AI assistant. Use the provided context to answer questions accurately and concisely."),
-            HumanMessage(content=prompt)
-        ]
-        
-        response = llm.invoke(messages)
+        prompt = self._format_prompt(query, context)
+        response = llm.invoke(prompt)
         return response
 
-    async def astream(self, prompt: str) -> AsyncGenerator[str, None]:
+    async def astream(self, query: str, context: str = "") -> AsyncGenerator[str, None]:
         """
         Asynchronously stream response chunks for a given prompt.
         """
@@ -64,16 +79,12 @@ class ChatModel:
             typical_p=0.95,
             temperature=0.01,
             repetition_penalty=1.03,
-            streaming=True,
-            callbacks=[StreamingStdOutCallbackHandler()]
+            streaming=True
         )
         
-        messages = [
-            SystemMessage(content="You are a helpful AI assistant. Use the provided context to answer questions accurately and concisely."),
-            HumanMessage(content=prompt)
-        ]
+        prompt = self._format_prompt(query, context)
         
-        async for chunk in llm.astream(messages):
+        async for chunk in llm.astream(prompt):
             if isinstance(chunk, str):
                 yield chunk
             elif hasattr(chunk, 'content'):

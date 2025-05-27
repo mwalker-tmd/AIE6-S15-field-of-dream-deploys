@@ -2,21 +2,7 @@ from backend.core.vectordatabase import VectorDatabase
 from backend.core.text_utils import PDFLoader, TextFileLoader, CharacterTextSplitter
 from langchain.schema.retriever import BaseRetriever
 from typing import List, Dict, Any
-
-class VectorStoreRetriever(BaseRetriever):
-    """A retriever that uses the vector store for similarity search."""
-    
-    def __init__(self, vector_store):
-        super().__init__()
-        self.vector_store = vector_store
-        
-    def _get_relevant_documents(self, query: str) -> List[Dict[str, Any]]:
-        """Get documents relevant for a query."""
-        if not self.vector_store.is_initialized:
-            return []
-            
-        results = self.vector_store.search(query)
-        return [{"page_content": text, "metadata": {"score": score}} for text, score in results]
+from pydantic import Field
 
 class VectorStore:
     _instance = None
@@ -41,29 +27,32 @@ class VectorStore:
         chunks = self.splitter.split_texts(documents)
 
         self.vector_db = VectorDatabase()
-        await self.vector_db.abuild_from_list(chunks)
+        self.vector_db.abuild_from_list(chunks)
         return len(chunks)
 
     def search(self, query: str, k: int = 4):
         """Search the vector database for relevant context"""
+        print(f"[DEBUG] VectorStore.search called with query: {query}")
         if self.vector_db is None:
+            print("[DEBUG] VectorStore.search: vector_db is None")
             return []
-        
         try:
             # Get search results from the vector database
             results = self.vector_db.search_by_text(query, k=k)
-            
+            print(f"[DEBUG] Raw search results: {results}")
             # Ensure we're returning a list of tuples with (text, score)
             processed_results = []
             for result in results:
                 if isinstance(result, tuple) and len(result) == 2:
-                    # If it's already a tuple with (document, score)
                     doc, score = result
-                    processed_results.append((str(doc.page_content), score))
+                    # Fix: handle both Document and str
+                    if hasattr(doc, 'page_content'):
+                        processed_results.append((str(doc.page_content), score))
+                    else:
+                        processed_results.append((str(doc), score))
                 else:
-                    # If it's just a document or something else
                     processed_results.append((str(result), 1.0))
-            
+            print(f"[DEBUG] Processed search results: {processed_results}")
             return processed_results
         except Exception as e:
             print(f"Error in vector store search: {e}")
@@ -71,9 +60,55 @@ class VectorStore:
 
     def as_retriever(self) -> BaseRetriever:
         """Convert the vector store into a LangChain retriever."""
-        return VectorStoreRetriever(self)
+        return VectorStoreRetriever(vector_store=self)
 
     @property
     def is_initialized(self) -> bool:
         """Check if the vector database has been initialized"""
-        return self.vector_db is not None 
+        return self.vector_db is not None
+
+    def has_content(self) -> bool:
+        """Check if the vectorstore has any content."""
+        try:
+            # Try to get a single point from the collection
+            result = self.client.scroll(
+                collection_name=self.collection_name,
+                limit=1
+            )
+            return len(result[0]) > 0
+        except Exception:
+            return False
+
+    def try_initialize_from_qdrant(self):
+        """Initialize vector_db from Qdrant if data exists."""
+        if self.vector_db is None:
+            db = VectorDatabase()
+            # Try to get a single point from the collection
+            try:
+                result = db.client.scroll(
+                    collection_name=db.collection_name,
+                    limit=1
+                )
+                if len(result[0]) > 0:
+                    print("[DEBUG] Qdrant has data, initializing vector_db.")
+                    self.vector_db = db
+                else:
+                    print("[DEBUG] Qdrant collection is empty.")
+            except Exception as e:
+                print(f"[DEBUG] Error checking Qdrant content: {e}")
+
+class VectorStoreRetriever(BaseRetriever):
+    """A retriever that uses the vector store for similarity search."""
+    
+    vector_store: VectorStore = Field(description="The vector store to use for retrieval")
+    
+    def _get_relevant_documents(self, query: str) -> List[Dict[str, Any]]:
+        """Get documents relevant for a query."""
+        print(f"[DEBUG] VectorStoreRetriever._get_relevant_documents called with query: {query}")
+        if not self.vector_store.is_initialized:
+            print("[DEBUG] VectorStoreRetriever: vector_store is not initialized")
+            return []
+            
+        results = self.vector_store.search(query)
+        print(f"[DEBUG] VectorStoreRetriever: search results: {results}")
+        return [{"page_content": text, "metadata": {"score": score}} for text, score in results] 

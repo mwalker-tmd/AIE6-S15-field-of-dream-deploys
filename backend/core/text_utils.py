@@ -70,7 +70,7 @@ class CharacterTextSplitter:
     def __init__(
         self,
         chunk_size: int = 1000,
-        chunk_overlap: int = 200,
+        chunk_overlap: int = 30,
     ):
         assert (
             chunk_size > chunk_overlap

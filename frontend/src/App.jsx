@@ -4,14 +4,14 @@ import { useState } from 'react'
 import './App.css' // Layout styles
 
 function App() {
-  const [fileUploaded, setFileUploaded] = useState(false)
+  const [fileUploaded, setFileUploaded] = useState(true)  // Start in chat mode
 
   const handleNewDocument = () => {
     setFileUploaded(false)
   }
 
   return (
-    <div className={`app-root ${fileUploaded ? 'chat-mode' : 'initial-mode'}`}>
+    <div className="app-root chat-mode">
       <div className="branding">
         <img
           src="/logo_light_transparent.png"
@@ -19,26 +19,24 @@ function App() {
           className="logo"
         />
         <h1>TMD RAG Chat</h1>
-        {fileUploaded && (
-          <button 
-            className="new-document-btn"
-            onClick={handleNewDocument}
-            title="Upload a new document"
-          >
-            📄 New Document
-          </button>
-        )}
+        <button 
+          className="new-document-btn"
+          onClick={handleNewDocument}
+          title="Upload a new document"
+        >
+          📄 New Document
+        </button>
       </div>
 
-      {fileUploaded && (
+      {fileUploaded ? (
         <div className="chat-section">
           <ChatBox />
         </div>
+      ) : (
+        <div className="upload-section">
+          <FileUploader onUploadSuccess={() => setFileUploaded(true)} />
+        </div>
       )}
-
-      <div className="footer-uploader">
-        <FileUploader onUploadSuccess={() => setFileUploaded(true)} />
-      </div>
     </div>
   )
 }

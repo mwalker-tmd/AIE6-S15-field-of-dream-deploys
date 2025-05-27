@@ -8,7 +8,7 @@ export default function ChatBox() {
 
   const askQuestion = async (e) => {
     e.preventDefault()
-    if (!question.trim()) return
+    if (!question.trim() || isStreaming) return
 
     setIsStreaming(true)
     setResponse('')
@@ -20,29 +20,38 @@ export default function ChatBox() {
       const res = await fetch(`${getApiUrl()}/ask`, {
         method: 'POST',
         body: formData,
+        headers: {
+          'Accept': 'text/plain',
+        },
       })
 
       if (!res.ok) {
-        try {
-          const errorData = await res.json()
-          throw new Error(errorData.error || `HTTP error! status: ${res.status}`)
-        } catch (e) {
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
+        const errorData = await res.json()
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`)
       }
 
       if (res.body) {
         const reader = res.body.getReader()
         const decoder = new TextDecoder('utf-8')
+        let buffer = ''
+
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
+
           const text = decoder.decode(value)
+          buffer += text
+
+          // Check if we have a complete JSON error message
           try {
-            const parsed = JSON.parse(text)
-            setResponse(prev => prev + (parsed.response || text))
-          } catch {
+            const errorData = JSON.parse(buffer)
+            if (errorData.error) {
+              throw new Error(errorData.error)
+            }
+          } catch (e) {
+            // Not a JSON error, continue processing as text
             setResponse(prev => prev + text)
+            buffer = ''
           }
         }
       } else {
@@ -54,6 +63,14 @@ export default function ChatBox() {
       setResponse('Error: ' + error.message)
     } finally {
       setIsStreaming(false)
+      setQuestion('')  // Clear the question after sending
+    }
+  }
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      askQuestion(e)
     }
   }
 
@@ -69,7 +86,8 @@ export default function ChatBox() {
           rows={3}
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ask a question..."
+          onKeyDown={handleKeyDown}
+          placeholder="Ask a question... (Press Enter to send, Shift+Enter for new line)"
         />
 
         <button onClick={askQuestion} disabled={isStreaming}>

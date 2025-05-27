@@ -1,4 +1,19 @@
-# 🌽 Field of Dream Deploys
+---
+title: TMD Open Source RAG
+emoji: 🧠
+colorFrom: yellow
+colorTo: green
+sdk: docker
+sdk_version: '1.0'
+app_file: app.py
+pinned: false
+license: mit
+short_description: TMD Open Source RAG implementation
+---
+
+# TMD Open Source RAG
+
+A Retrieval-Augmented Generation (RAG) app using open-source models, FastAPI, and Vite/React.# 🌽 Field of Dream Deploys
 
 ### **_“If you deploy it, they can use it.”_**  
 Welcome to `field-of-dream-deploys`, a full-stack Retrieval-Augmented Generation (RAG) application powered by open-source models deployed via Hugging Face Inference Endpoints.

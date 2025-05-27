@@ -17,7 +17,7 @@ export default function ChatBox() {
       const formData = new FormData()
       formData.append('question', question)
 
-      const res = await fetch(`${getApiUrl()}/ask`, {
+      const res = await fetch(`${getApiUrl()}/api/ask`, {
         method: 'POST',
         body: formData,
         headers: {

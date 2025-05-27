@@ -59,8 +59,8 @@ export default function ChatBox() {
               const newMessages = [...prev]
               const lastMessage = newMessages[newMessages.length - 1]
               if (lastMessage && lastMessage.type === 'ai') {
-                lastMessage.content = aiResponse
-                return [...newMessages]
+                const updatedMessage = { ...lastMessage, content: aiResponse }
+                return [...newMessages.slice(0, -1), updatedMessage]
               } else {
                 return [...newMessages, { type: 'ai', content: aiResponse }]
               }
